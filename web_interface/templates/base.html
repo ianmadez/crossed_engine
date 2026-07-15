@@ -8,11 +8,16 @@
     <link rel="icon" type="image/png" sizes="30x30" href="{{ url_for('static', filename='c-favicon.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
 </head>
 
 <body>
     <div id="loading-screen">
-        <div class="loading-content">
+        <div id="three-loading-canvas"
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none;">
+        </div>
+
+        <div class="loading-content" style="position: relative; z-index: 2;">
             <h1 class="loading-logo">CROSSED: THE ARCHIVES</h1>
             <div class="loading-bar-container">
                 <div id="loading-bar-progress"></div>
@@ -131,6 +136,12 @@
                                 Appearance
                             </label>
 
+                            <label
+                                style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: #bfa393; cursor: pointer;">
+                                <input type="checkbox" id="two-pass-toggle" checked
+                                    style="accent-color: #8c2323; transform: scale(1.1);"> Plan then Expand (better quality, uses two calls)
+                            </label>
+
                             <button class="action-btn" style="width: 100%; margin-top: 5px; padding: 12px;"
                                 onclick="triggerChapterGeneration()">Forge Next Chapter</button>
                         </div>
@@ -161,6 +172,7 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/loading_scene.js') }}"></script>
     <script src="{{ url_for('static', filename='js/stream_view.js') }}"></script>
     <script src="{{ url_for('static', filename='js/library_3d.js') }}"></script>
 </body>

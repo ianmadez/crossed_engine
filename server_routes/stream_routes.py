@@ -1,7 +1,8 @@
 # server_routes/stream_routes.py
 import json
+import requests
 from flask import Blueprint, Response, request
-from core_engine.database import compile_historical_context, add_chapter, get_book_meta
+from core_engine.database import compile_historical_context, add_chapter, get_book_meta, consolidate_rolling_summary
 from core_engine.ollama_client import stream_chapter_generation
 from core_engine.memory_manager import execute_adaptive_compression
 
@@ -21,11 +22,20 @@ def stream_forge_nexus():
     context_scale = data.get("context_scale", 4096)
     # Dynamic model selection from frontend dropdown
     model_name = data.get("model_name") or None
+    two_pass = data.get("two_pass", True)
 
     # Look up book-level structural metadata for phase calculation
     book_meta = get_book_meta(book_id)
     total_chapters = book_meta.get("total_chapters", 5)
     ending_type = book_meta.get("ending_type", "bleak")
+
+    # Ceiling check before entering generator — returns 400 if sealed
+    if chapter_num > total_chapters:
+        return Response(
+            f"data: {json.dumps({'error': True, 'message': 'Chronicle is sealed. Generation ceiling reached.'})}\n\n",
+            status=400,
+            mimetype="text/event-stream"
+        )
 
     history_stubs = compile_historical_context(book_id)
 
@@ -42,12 +52,20 @@ def stream_forge_nexus():
             model_name=model_name,
             current_chapter=chapter_num,
             total_chapters=total_chapters,
-            ending_type=ending_type
+            ending_type=ending_type,
+            two_pass=two_pass
         )
 
-        for token in token_iterator:
-            full_generated_prose.append(token)
-            yield f"data: {json.dumps({'token': token, 'done': False})}\n\n"
+        try:
+            for token in token_iterator:
+                full_generated_prose.append(token)
+                yield f"data: {json.dumps({'token': token, 'done': False})}\n\n"
+        except requests.exceptions.RequestException as e:
+            yield f"data: {json.dumps({'error': True, 'message': str(e)})}\n\n"
+            return
+        except ValueError as e:
+            yield f"data: {json.dumps({'error': True, 'message': str(e)})}\n\n"
+            return
 
         complete_text = "".join(full_generated_prose).strip()
 
@@ -58,6 +76,9 @@ def stream_forge_nexus():
         compress_log = execute_adaptive_compression(
             book_id, chapter_num, complete_text, model_name=model_name
         )
+
+        # Consolidate rolling summary — fold aged-out stub into condensed history
+        consolidate_rolling_summary(book_id, chapter_num)
 
         yield f"data: {json.dumps({'done': True, 'summary_stub': compress_log})}\n\n"
 

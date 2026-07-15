@@ -3,6 +3,7 @@
 // App Core State Control Variables
 let currentBookId = null;
 let currentChapterNum = 1;
+let currentBookComplete = false;
 let isAudioMuted = true;
 let targetedVolumeLevel = 0.35;
 
@@ -10,8 +11,14 @@ let targetedVolumeLevel = 0.35;
  * Handles clean switching between application panels without disrupting animation or streaming loops
  */
 function navigateView(viewName) {
+    // Boundary quarantine — block generator access for completed books
+    if (viewName === 'generator' && currentBookComplete) {
+        navigateView('reader');
+        return;
+    }
+
     const views = ['shelf', 'generator', 'reader'];
-    
+
     views.forEach(v => {
         const element = document.getElementById(`view-${v}`);
         if (element) {
@@ -177,6 +184,22 @@ function addModalCharacterRow() {
                 <input type="text" class="char-behavior" placeholder="e.g., Highly anxious, protective" style="width: 100%; background: #000; border: 1px solid #3d302a; color: #d9d2c9; padding: 6px; font-family: inherit; box-sizing: border-box;">
             </div>
         </div>
+        <div style="display: flex; gap: 10px; width: 100%; box-sizing: border-box;">
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0;">
+                <label style="font-size: 0.7rem; color: #bfa393;">Character Type</label>
+                <select class="char-type" style="width: 100%; background: #000; border: 1px solid #3d302a; color: #d9d2c9; padding: 6px; font-family: inherit; box-sizing: border-box; cursor: pointer;">
+                    <option value="survivor">Survivor</option>
+                    <option value="infected">Infected (Crossed)</option>
+                </select>
+            </div>
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0;">
+                <label style="font-size: 0.7rem; color: #bfa393;">Protagonist</label>
+                <div style="display: flex; align-items: center; height: 32px; gap: 8px;">
+                    <input type="checkbox" class="char-protagonist" style="accent-color: #8c2323; transform: scale(1.2);">
+                    <span style="font-size: 0.75rem; color: #bfa393;">Is main character</span>
+                </div>
+            </div>
+        </div>
     `;
     container.appendChild(charRow);
     container.scrollTop = container.scrollHeight;
@@ -263,7 +286,7 @@ function submitNewVolumeRun() {
     // 1. Serialize dynamic scenario vector arrays
     const scenarioBlocks = document.querySelectorAll('.scenario-input-block');
     const scenarioBeatsArray = [];
-    
+
     scenarioBlocks.forEach(block => {
         const heading = block.querySelector('.scene-heading').value.trim();
         const detail = block.querySelector('.scene-detail').value.trim();
@@ -271,7 +294,7 @@ function submitNewVolumeRun() {
             scenarioBeatsArray.push(`[${heading.toUpperCase()}]: ${detail}`);
         }
     });
-    
+
     const scenario = scenarioBeatsArray.join('\n');
 
     // 2. Serialize dynamic character dossiers
@@ -283,13 +306,17 @@ function submitNewVolumeRun() {
         const condition = block.querySelector('.char-condition').value.trim();
         const physical = block.querySelector('.char-physical').value.trim();
         const behavior = block.querySelector('.char-behavior').value.trim();
+        const charType = block.querySelector('.char-type').value;
+        const isProtagonist = block.querySelector('.char-protagonist').checked ? 1 : 0;
 
         if (name) {
             characterProfilesArray.push(
                 `NAME: ${name}\n` +
                 `HEALTH STATUS: ${condition || 'Healthy'}\n` +
                 `PHYSICAL PROFILE: ${physical || 'Standard gear'}\n` +
-                `BEHAVIORAL MATRICES: ${behavior || 'Pragmatic focus'}`
+                `BEHAVIORAL MATRICES: ${behavior || 'Pragmatic focus'}\n` +
+                `CHARACTER_TYPE: ${charType}\n` +
+                `IS_PROTAGONIST: ${isProtagonist}`
             );
         }
     });
@@ -309,23 +336,23 @@ function submitNewVolumeRun() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, scenario, characters, total_chapters: totalChapters, ending_type: endingType })
     })
-    .then(res => res.json())
-    .then(response => {
-        if (response.status === 'success') {
-            currentBookId = response.book_id;
-            currentChapterNum = 1;
-            
-            document.getElementById('modal-overlay-wrapper').remove();
-            navigateView('generator');
-            
-            if (typeof initCrucibleInterface === 'function') {
-                initCrucibleInterface(scenario, characters);
+        .then(res => res.json())
+        .then(response => {
+            if (response.status === 'success') {
+                currentBookId = response.book_id;
+                currentChapterNum = 1;
+
+                document.getElementById('modal-overlay-wrapper').remove();
+                navigateView('generator');
+
+                if (typeof initCrucibleInterface === 'function') {
+                    initCrucibleInterface(scenario, characters);
+                }
+            } else {
+                alert("Database tracking setup failed: " + response.message);
             }
-        } else {
-            alert("Database tracking setup failed: " + response.message);
-        }
-    })
-    .catch(err => console.error("Network response tracking cycle failed to resolve properly:", err));
+        })
+        .catch(err => console.error("Network response tracking cycle failed to resolve properly:", err));
 }
 
 // Global click wrapper hook to cleanly collapse the sound settings drawer if clicking out side bounds
@@ -339,29 +366,60 @@ window.addEventListener('click', (e) => {
 
 // Append directly to the end of web_interface/static/js/main.js
 
+// web_interface/static/js/main.js
+
+// --- REPLACE WITH ---
 /**
  * Operates a 4-second real-time loading bar layout sequence on app launch
+ * Cyclically shifts dark, thematic Crossed universe markers to ground the user tension context.
  */
 function handleSystemBootLoader() {
     const loader = document.getElementById('loading-screen');
     const progressBar = document.getElementById('loading-bar-progress');
+    const subtext = loader ? loader.querySelector('.loading-subtext') : null;
     if (!loader || !progressBar) return;
 
+    // Curated atmospheric horror survival markers
+    const phrases = [
+        "June 12, 2008. The day the world changed forever.",
+        "Watch their faces. If you see the cross, you run.",
+        "They remember your name. They know how to lie.",
+        "Don't try to help them. There is nothing left inside but the urge to hurt.",
+        "The shortwave radio is just static now. The evacuation points aren't responding.",
+        "Keep your grip tight on the wrench. Don't blink. Don't slow down."
+    ];
+
     let progress = 0;
-    const duration = 4000; // 4 seconds maximum boundary
-    const intervalTime = 40; 
+    const duration = 6000; // Locked down to exactly 6 seconds total run boundary
+    const intervalTime = 40;
     const increment = (intervalTime / duration) * 100;
+    
+    // Explicitly defines the text rotation speed milestone limit (2000ms = 2 seconds per phrase)
+    const msPerTextChange = 2000; 
 
     const loaderTimer = setInterval(() => {
         progress += increment;
+
+        // Calculates absolute elapsed time to shift the phrase index exactly every 2 seconds
+        if (subtext) {
+            const currentElapsedMs = (progress / 100) * duration;
+            const phraseIndex = Math.min(Math.floor(currentElapsedMs / msPerTextChange), phrases.length - 1);
+            
+            if (subtext.innerText !== phrases[phraseIndex]) {
+                subtext.innerText = phrases[phraseIndex];
+            }
+        }
+
         if (progress >= 100) {
             progressBar.style.width = '100%';
             clearInterval(loaderTimer);
-            
-            // Execute smooth visual fade out
+
+            // Execute clean fading sequence animations
             loader.style.opacity = '0';
             setTimeout(() => {
                 loader.style.visibility = 'hidden';
+                // Shutdown the heavy background animation engine loops when loading screen terminates to save VRAM
+                if (window.stopLoadingSceneLoop) window.stopLoadingSceneLoop();
             }, 800);
         } else {
             progressBar.style.width = `${progress}%`;
@@ -385,6 +443,9 @@ window.addEventListener('DOMContentLoaded', handleSystemBootLoader);
 /**
  * Queries the local API for all saved volumes and renders them on the library shelf
  */
+/**
+ * Queries the local API for all saved volumes and renders them on the library shelf
+ */
 function loadVolumesFromServer() {
     const shelfContainer = document.getElementById('view-shelf');
     if (!shelfContainer) return;
@@ -400,14 +461,13 @@ function loadVolumesFromServer() {
 }
 
 /**
- * Generates the clean HTML list structure inside the shelf overlay panel
+ * Generates the clean HTML list structure inside the shelf overlay panel (Screen 1: Book List View)
  * @param {Array} books - Array of book objects returned from the SQLite database
  */
 function renderShelfCatalog(books) {
     const shelfContainer = document.getElementById('view-shelf');
     if (!shelfContainer) return;
 
-    // Preserve the original header layout panel and button structure
     shelfContainer.innerHTML = `
         <div class="overlay-panel text-center">
             <h2>Your Book Collection</h2>
@@ -415,7 +475,7 @@ function renderShelfCatalog(books) {
             <button class="action-btn" style="margin-top: 20px;" onclick="openNewVolumeModal()" title="Start configuring a new book project">Create New Volume</button>
             
             <div id="book-grid-ledger" style="margin-top: 30px; display: flex; flex-direction: column; gap: 15px; text-align: left;">
-                </div>
+            </div>
         </div>
     `;
 
@@ -432,53 +492,141 @@ function renderShelfCatalog(books) {
             cursor: pointer; display: flex; justify-content: space-between; align-items: center;
             transition: border-color 0.2s ease;
         `;
-        bookRow.setAttribute('title', `Click to open chapters for: ${book.title}`);
-        
-        // Hover visual states handled via inline listeners to avoid CSS clutter
+        bookRow.setAttribute('title', `Click to view chapters for: ${book.title}`);
+
         bookRow.onmouseenter = () => bookRow.style.borderColor = '#8c2323';
         bookRow.onmouseleave = () => bookRow.style.borderColor = '#3d302a';
-        
-        // Click behavior binds the active session ID context dynamically
-        bookRow.onclick = () => selectActiveVolume(book.id, book.title, book.scenario, book.characters);
+
+        // Passes both the technical scenario rules for the generator and the clean synopsis for the interface layout
+        bookRow.onclick = (e) => {
+            if (e.target.tagName === 'BUTTON' || e.target.classList.contains('delete-btn')) return;
+            selectActiveVolume(book.id, book.title, book.scenario, book.characters, book.synopsis, book.total_chapters);
+        };
+
+        // For legacy stories, dynamically strip out technical layout brackets on the fly
+        const cleanPreviewText = book.synopsis || book.scenario.replace(/\[[^\]]+\]:\s*/g, ' ');
 
         bookRow.innerHTML = `
-            <div>
+            <div style="flex-grow: 1; min-width: 0; padding-right: 15px;">
                 <h4 style="font-family: 'ShenzenIndustrial', sans-serif; color: #d9d2c9; font-size: 1.2rem;">${book.title}</h4>
                 <p style="font-size: 0.8rem; color: #bfa393; margin-top: 4px; max-width: 450px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                    ${book.scenario}
+                    ${cleanPreviewText}
                 </p>
             </div>
-            <span style="font-size: 0.75rem; color: #8c2323; font-family: monospace;">OPEN CHAPTERS →</span>
+            <div style="display: flex; align-items: center; gap: 15px; flex-shrink: 0;">
+                <button class="delete-btn nav-btn" style="padding: 4px 10px; font-size: 0.75rem; border-color: #8c2323; color: #8c2323; background: transparent;" onclick="event.stopPropagation(); deleteVolumeFromServer(${book.id}, '${book.title.replace(/'/g, "\\'")}')">DELETE</button>
+                <span style="font-size: 0.75rem; color: #8c2323; font-family: monospace;">VIEW CHAPTERS →</span>
+            </div>
         `;
         gridLedger.appendChild(bookRow);
     });
 }
 
 /**
- * Assigns global runtime context state when a book row is clicked
+ * Switches the inner layout to the sub-screen panel inside the bookshelf view (Screen 2: Chapter Menu)
  */
-function selectActiveVolume(id, title, scenario, characters) {
+function selectActiveVolume(id, title, scenario, characters, synopsis, total_chapters) {
     currentBookId = id;
-    
-    // Query the API to find how many chapters already exist to calculate the next sequence number
+
     fetch(`/api/books/${id}/chapters`)
         .then(res => res.json())
         .then(response => {
             if (response.status === 'success') {
                 const chapters = response.data;
-                currentChapterNum = chapters.length + 1;
-                
-                // Initialize the AI generation panel settings
+
+                // Set completion flag before rendering
+                currentBookComplete = chapters.length >= total_chapters;
+
+                // Initialize the AI generation runtime matrix properties behind the scenes using raw variables
                 if (typeof initCrucibleInterface === 'function') {
                     initCrucibleInterface(scenario, characters);
                 }
-                
-                // Populate the Reader view container immediately with the volume data
-                displayChaptersInReaderView(title, chapters);
-                navigateView('reader');
+
+                // Keep the background canvas active and render the layout with the clean synopsis blurb
+                renderShelfChapterList(id, title, scenario, characters, chapters, synopsis, total_chapters);
             }
         })
         .catch(err => console.error("Error loading relational narrative strings:", err));
+}
+
+/**
+ * Builds the intermediate chapter select directory window straight inside the bookshelf panel view
+ */
+function renderShelfChapterList(id, title, scenario, characters, chapters, synopsis, total_chapters) {
+    const shelfContainer = document.getElementById('view-shelf');
+    if (!shelfContainer) return;
+
+    const isComplete = chapters.length >= total_chapters;
+
+    // Clean scrubbing pass handles raw parameter boxes for historical database entries cleanly
+    const blurbText = synopsis || scenario.replace(/\[[^\]]+\]:\s*/g, '\n\n').replace(/\n{3,}/g, '\n\n').trim();
+
+    // Determine shelf appearance and generator action based on completion
+    const shelfBorderStyle = isComplete ? 'border-color: #2b221e;' : '';
+    const generatorButtonHtml = isComplete
+        ? `<div style="padding: 8px 16px; font-size: 0.85rem; color: #5a4a3d; border: 1px solid #2b221e; background: #0a0807; text-align: center; letter-spacing: 1px;">[VOLUME SEALED & ARCHIVED IN VAULT]</div>`
+        : `<button class="action-btn" style="padding: 8px 16px; font-size: 0.85rem;" onclick="currentChapterNum = ${chapters.length + 1}; navigateView('generator');" title="Advance directly into the AI writing terminal tool">
+                    Open Generator Workspace (Ch. ${chapters.length + 1})
+                </button>`;
+
+    shelfContainer.innerHTML = `
+        <div class="overlay-panel text-center" style="max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; ${shelfBorderStyle}">
+            <div style="text-align: left; margin-bottom: 10px; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center;">
+                <button class="nav-btn" onclick="loadVolumesFromServer()" style="font-size: 0.8rem; padding: 4px 10px;" title="Return to the global archive catalog">← Back to Collection</button>
+                <button class="nav-btn" style="font-size: 0.8rem; padding: 4px 10px; border-color: #8c2323; color: #8c2323;" onclick="deleteVolumeFromServer(${id}, '${title.replace(/'/g, "\\'")}')">✕ Delete Volume</button>
+            </div>
+            <h2 style="font-family: 'ShenzenIndustrial', sans-serif; color: #8c2323; text-transform: uppercase; margin-bottom: 10px; flex-shrink: 0;">${title}</h2>
+            ${isComplete ? '<p style="font-size: 0.75rem; color: #5a4a3d; margin-bottom: 8px;">This chronicle has reached its chapter ceiling.</p>' : ''}
+            
+            <div style="max-height: 160px; overflow-y: auto; background: #070605; border: 1px solid #2b221e; padding: 12px 18px; max-width: 560px; margin-left: auto; margin-right: auto; margin-bottom: 20px; box-sizing: border-box; flex-shrink: 0; text-align: left;">
+                <p style="color: #bfa393; font-size: 0.85rem; line-height: 1.6; font-style: italic; letter-spacing: 0.3px; white-space: pre-line; margin: 0; font-family: inherit;">${blurbText}</p>
+            </div>
+            
+            <div style="margin-bottom: 20px; border-bottom: 1px dashed #3d302a; padding-bottom: 15px; flex-shrink: 0;">
+                ${generatorButtonHtml}
+            </div>
+
+            <div id="shelf-chapter-ledger" style="display: flex; flex-direction: column; gap: 10px; text-align: left; max-width: 520px; margin-left: auto; margin-right: auto; overflow-y: auto; padding-right: 5px; box-sizing: border-box; flex-grow: 1;">
+            </div>
+        </div>
+    `;
+
+    const chapterLedger = document.getElementById('shelf-chapter-ledger');
+    if (chapters.length === 0) {
+        chapterLedger.innerHTML = `<p style="color: #bfa393; text-align: center; font-style: italic; margin-top: 10px;">No text segments have been forged for this chronicle yet.</p>`;
+        return;
+    }
+
+    chapters.forEach(ch => {
+        const chRow = document.createElement('div');
+        chRow.style = `
+            background: #000; border: 1px solid #3d302a; padding: 12px 15px; 
+            cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+            transition: border-color 0.2s ease;
+        `;
+        chRow.onmouseenter = () => chRow.style.borderColor = '#8c2323';
+        chRow.onmouseleave = () => chRow.style.borderColor = '#3d302a';
+
+        chRow.onclick = () => {
+            // Compile the whole book into Reader view structures
+            displayChaptersInReaderView(title, chapters);
+            // Hop over to the text presenter layout canvas
+            navigateView('reader');
+            // Execute automated smooth tracking down to the targeted element anchor
+            setTimeout(() => {
+                const targetBlock = document.getElementById(`reader-ch-${ch.chapter_number}`);
+                if (targetBlock) {
+                    targetBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 60);
+        };
+
+        chRow.innerHTML = `
+            <span style="font-family: 'ShenzenIndustrial', sans-serif; color: #d9d2c9; font-size: 1.1rem; text-transform: uppercase;">${ch.title}</span>
+            <span style="font-size: 0.75rem; color: #8c2323; font-family: monospace; font-weight: bold; padding-left: 10px;">READ →</span>
+        `;
+        chapterLedger.appendChild(chRow);
+    });
 }
 
 /**
@@ -500,7 +648,7 @@ function displayChaptersInReaderView(volumeTitle, chapters) {
     // 1. Build an internal table of contents navigation bar at the top
     const navIndexPanel = document.createElement('div');
     navIndexPanel.style = "background: rgba(0,0,0,0.05); border: 1px dashed #000; padding: 15px; margin-bottom: 35px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;";
-    
+
     chapters.forEach(ch => {
         const targetAnchorId = `reader-ch-${ch.chapter_number}`;
         const jumpBtn = document.createElement('button');
@@ -522,11 +670,11 @@ function displayChaptersInReaderView(volumeTitle, chapters) {
         const chapterSection = document.createElement('div');
         chapterSection.id = `reader-ch-${ch.chapter_number}`;
         chapterSection.style = "margin-bottom: 45px; border-bottom: 1px dashed rgba(0,0,0,0.15); padding-bottom: 35px; scroll-margin-top: 20px;";
-        
+
         const chapterHeader = document.createElement('h3');
         chapterHeader.style = "font-family: 'ShenzenIndustrial', sans-serif; font-size: 1.4rem; color: #8c2323; margin-bottom: 15px;";
         chapterHeader.innerText = `${ch.title.toUpperCase()}`;
-        
+
         const chapterContent = document.createElement('div');
         const paragraphBlocks = ch.content.split('\n\n');
         paragraphBlocks.forEach(pText => {
@@ -545,3 +693,73 @@ function displayChaptersInReaderView(volumeTitle, chapters) {
 
 // Hook catalog initialization process into the master window load sequence
 window.addEventListener('DOMContentLoaded', loadVolumesFromServer);
+
+/**
+ * Issues an atomic HTTP DELETE request to purge a book volume and triggers a catalog refresh
+ */
+function deleteVolumeFromServer(bookId, title) {
+    // Prevent duplicate confirmation modals from spawning simultaneously
+    if (document.getElementById('delete-confirm-modal-wrapper')) return;
+
+    // 1. Construct an immersive, in-theme modal overlay container matching the Vault aesthetic
+    const modalOverlay = document.createElement('div');
+    modalOverlay.id = 'delete-confirm-modal-wrapper';
+    modalOverlay.style = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(12, 10, 9, 0.98); z-index: 2000;
+        display: flex; align-items: center; justify-content: center;
+    `;
+
+    modalOverlay.innerHTML = `
+        <div class="overlay-panel" style="width: 480px; border: 3px solid #000; background: #1a1412; box-shadow: 10px 10px 0px #000; padding: 30px; box-sizing: border-box; text-align: center;">
+            <h2 style="font-family: 'ShenzenIndustrial', sans-serif; margin-bottom: 10px; color: #8c2323; letter-spacing: 1px;">PURGE THE FLITH?</h2>
+            <p style="font-size: 0.9rem; color: #bfa393; line-height: 1.5; margin-bottom: 25px; border-bottom: 1px dashed #3d302a; padding-bottom: 15px;">
+                Are you absolutely sure you want to permanently erase <span style="color: #d9d2c9; font-weight: bold; font-style: normal;">"${title}"</span>? All relational data, historical chapters, and compiled context stubs will be completely stripped from the database ledger. This action cannot be undone.
+            </p>
+            
+            <div style="display: flex; gap: 15px; justify-content: flex-end; width: 100%; box-sizing: border-box;">
+                <button id="confirm-delete-cancel" class="nav-btn" style="padding: 8px 16px; font-size: 0.85rem;">ABORT</button>
+                <button id="confirm-delete-execute" class="action-btn" style="padding: 8px 16px; font-size: 0.85rem; background: #8c2323; border-color: #000;">WIPE BOOK</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modalOverlay);
+
+    // 2. Wire the Cancel / Dismiss behavioral hook
+    document.getElementById('confirm-delete-cancel').onclick = () => {
+        modalOverlay.remove();
+    };
+
+    // 3. Wire the Destruction / Execution network pipeline hook
+    document.getElementById('confirm-delete-execute').onclick = () => {
+        const executeBtn = document.getElementById('confirm-delete-execute');
+        const cancelBtn = document.getElementById('confirm-delete-cancel');
+        
+        // Lock inputs immediately to guard against multi-click transaction races
+        executeBtn.disabled = true;
+        cancelBtn.disabled = true;
+        executeBtn.innerText = "WIPING RECORD...";
+
+        fetch('/api/books/' + bookId, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        })
+            .then(res => res.json())
+            .then(response => {
+                modalOverlay.remove(); // Dismantle confirmation view block layer
+                if (response.status === 'success') {
+                    navigateView('shelf'); 
+                    loadVolumesFromServer();
+                } else {
+                    alert(`Purge operation failed: ${response.message}`);
+                    loadVolumesFromServer();
+                }
+            })
+            .catch(err => {
+                console.error("Network fault encountered during ledger purge pass:", err);
+                modalOverlay.remove();
+                loadVolumesFromServer();
+            });
+    };
+}

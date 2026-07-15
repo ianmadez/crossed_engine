@@ -15,5 +15,27 @@
     },
     "database": {
         "path": "library_vault.db"
+    },
+    "nervous_system": {
+        "rolling_window_size": 3,
+        "speech_coherence_divisor": 20,
+        "outline_temperature": 0.3,
+        "outline_top_p": 0.3,
+        "outline_num_predict": 150,
+        "outline_timeout": 30,
+        "vram_ctx_threshold": 4096,
+        "vram_predict_high": 2048,
+        "vram_predict_low": 1024,
+        "compression_temperature": 0.1,
+        "compression_top_p": 0.1,
+        "compression_num_predict": 250,
+        "compression_max_retries": 2,
+        "phase_rise_threshold": 0.4,
+        "phase_action_threshold": 0.7
+    },
+    "timeouts": {
+        "discovery_timeout": 10,
+        "groq_timeout": 30,
+        "synopsis_timeout": 20
     }
 }

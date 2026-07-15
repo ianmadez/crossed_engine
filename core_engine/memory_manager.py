@@ -1,8 +1,10 @@
 # core_engine/memory_manager.py
 import json
+import re
+import logging
 import requests
-from .config import OLLAMA_URL, OLLAMA_TIMEOUT
-from .database import add_memory_stub, compile_historical_context
+from .config import OLLAMA_URL, OLLAMA_TIMEOUT, COMPRESSION_TEMPERATURE, COMPRESSION_TOP_P, COMPRESSION_NUM_PREDICT, COMPRESSION_MAX_RETRIES
+from .database import add_memory_stub, compile_historical_context, find_character_id_by_name, update_character_state
 from .ollama_client import discover_ollama_models
 
 
@@ -50,9 +52,12 @@ def execute_adaptive_compression(
         "   Never classify them as a beacon of hope or mild safety factor. They are completely hostile vectors.\n\n"
         "Output exactly one text block adhering to this bracketed schema layout. Produce NO instructional annotations:\n"
         "[LOCATION/TIME]: Explicit geographic coordinates and active time duration delta changes.\n"
-        "[STATUS]: Verbatim current health state, physical trauma, and operational anxiety levels of characters.\n"
-        "[LOGISTICS]: Absolute list of functional tools, items, weapons carried, and food resources.\n"
-        "[VECTOR]: Tactical hostile vectors or geography barriers within immediate proximity."
+        "[VECTOR]: Tactical hostile vectors or geography barriers within immediate proximity.\n\n"
+        "Then for each character whose state changed or was confirmed unchanged, output:\n"
+        "### CHARACTER: <exact character name>\n"
+        "HEALTH: <current health state, physical trauma, injuries>\n"
+        "GEAR: <functional tools, items, weapons carried, food resources>\n"
+        "BEHAVIOR: <operational anxiety, recent actions, behavioral state>"
     )
 
     user_payload = (
@@ -66,24 +71,79 @@ def execute_adaptive_compression(
         "prompt": user_payload,
         "system": compression_system_prompt,
         "options": {
-            "temperature": 0.1,
-            "top_p": 0.1,
-            "num_predict": 250
+            "temperature": COMPRESSION_TEMPERATURE,
+            "top_p": COMPRESSION_TOP_P,
+            "num_predict": COMPRESSION_NUM_PREDICT
         },
         "stream": False
     }
 
-    try:
-        response = requests.post(OLLAMA_URL, json=request_data, timeout=OLLAMA_TIMEOUT)
-        response.raise_for_status()
+    # Retry counter for schema validation (Phase 3.3)
+    max_attempts = COMPRESSION_MAX_RETRIES
 
-        compressed_stub = response.json().get("response", "").strip()
-        formatted_stub = f"[CH {chapter_num} STATE MATRIX]\n{compressed_stub}"
+    for attempt in range(max_attempts):
+        try:
+            response = requests.post(OLLAMA_URL, json=request_data, timeout=OLLAMA_TIMEOUT)
+            response.raise_for_status()
 
-        add_memory_stub(book_id, chapter_num, formatted_stub)
-        return formatted_stub
+            compressed_stub = response.json().get("response", "").strip()
 
-    except Exception as network_exception:
-        fallback_stub = f"[CH {chapter_num} STATE MATRIX]\n[WARN]: Connection timed out. Prior state matrices carried forward blind."
-        add_memory_stub(book_id, chapter_num, fallback_stub)
-        return fallback_stub
+            # Validate that all required bracket headers are present and non-empty
+            has_location = "[LOCATION/TIME]:" in compressed_stub
+            has_vector = "[VECTOR]:" in compressed_stub
+            has_character = "### CHARACTER:" in compressed_stub
+            valid = has_location and has_vector and has_character
+
+            if not valid and attempt == 0:
+                # Retry with a high-penalty correction prompt
+                request_data["prompt"] += (
+                    "\n\nCRITICAL FORMAT ERROR DETECTED — Previous output missing required sections. "
+                    "You MUST include [LOCATION/TIME]:, [VECTOR]:, and at least one ### CHARACTER: block. "
+                    "Output ONLY the corrected matrix block."
+                )
+                continue
+
+            if valid:
+                # Parse per-character blocks and persist state to DB
+                character_blocks = re.split(r'\n### CHARACTER:\s*', compressed_stub)
+                for block in character_blocks:
+                    if not block.strip():
+                        continue
+                    lines = block.strip().split('\n')
+                    char_name = lines[0].strip()
+                    health = ""
+                    gear = ""
+                    behavior = ""
+                    for line in lines[1:]:
+                        if line.startswith("HEALTH:"):
+                            health = line.replace("HEALTH:", "").strip()
+                        elif line.startswith("GEAR:"):
+                            gear = line.replace("GEAR:", "").strip()
+                        elif line.startswith("BEHAVIOR:"):
+                            behavior = line.replace("BEHAVIOR:", "").strip()
+
+                    char_id = find_character_id_by_name(book_id, char_name)
+                    if char_id:
+                        update_character_state(char_id, gear, behavior, health)
+                    else:
+                        logging.warning(
+                            f"[memory_manager] Character '{char_name}' not found in book {book_id}. "
+                            f"Skipping state update."
+                        )
+
+            formatted_stub = f"[CH {chapter_num} STATE MATRIX]\n{compressed_stub}"
+            add_memory_stub(book_id, chapter_num, formatted_stub)
+            return formatted_stub
+
+        except Exception as network_exception:
+            if attempt == max_attempts - 1:
+                logging.warning(
+                    f"[memory_manager] Compression failed for book {book_id} chapter {chapter_num}: {network_exception}"
+                )
+                fallback_stub = (
+                    f"[CH {chapter_num} STATE MATRIX]\n"
+                    f"[WARN]: Connection failed after {max_attempts} attempts. "
+                    f"Prior state matrices carried forward blind."
+                )
+                add_memory_stub(book_id, chapter_num, fallback_stub)
+                return fallback_stub

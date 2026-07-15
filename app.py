@@ -2,7 +2,7 @@
 import os
 from flask import Flask, render_template, send_from_directory
 from core_engine.config import SERVER_HOST, SERVER_PORT
-from core_engine.database import init_db
+from core_engine.database import init_db, migrate_is_protagonist_for_existing_books
 from server_routes.library_routes import library_api
 from server_routes.stream_routes import stream_api
 
@@ -32,6 +32,8 @@ if __name__ == "__main__":
     print("--- VAULT INITIALIZATION STARTING ---")
     # Initialize the local SQLite relational database files if they are missing
     init_db()
+    # Flag first character per existing book as default protagonist
+    migrate_is_protagonist_for_existing_books()
     print(f"[SUCCESS]: Local SQLite schema initialized cleanly.")
     print(f"[SERVER]: Launching active loop engine on http://{SERVER_HOST}:{SERVER_PORT}")
 

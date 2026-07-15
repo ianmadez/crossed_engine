@@ -65,3 +65,27 @@ SERVER_PORT = _SETTINGS["server"]["port"]
 GEN_PARAMS = dict(_SETTINGS["generation"])
 
 DB_PATH = os.path.join(BASE_DIR, _SETTINGS["database"]["path"])
+
+# --- Nervous System constants (from settings.json or defaults) ---
+_NS = _SETTINGS["nervous_system"]
+ROLLING_WINDOW_SIZE = _NS["rolling_window_size"]
+SPEECH_COHERENCE_DIVISOR = _NS["speech_coherence_divisor"]
+OUTLINE_TEMPERATURE = _NS["outline_temperature"]
+OUTLINE_TOP_P = _NS["outline_top_p"]
+OUTLINE_NUM_PREDICT = _NS["outline_num_predict"]
+OUTLINE_TIMEOUT = _NS["outline_timeout"]
+VRAM_CTX_THRESHOLD = _NS["vram_ctx_threshold"]
+VRAM_PREDICT_HIGH = _NS["vram_predict_high"]
+VRAM_PREDICT_LOW = _NS["vram_predict_low"]
+COMPRESSION_TEMPERATURE = _NS["compression_temperature"]
+COMPRESSION_TOP_P = _NS["compression_top_p"]
+COMPRESSION_NUM_PREDICT = _NS["compression_num_predict"]
+COMPRESSION_MAX_RETRIES = _NS["compression_max_retries"]
+PHASE_RISE_THRESHOLD = _NS["phase_rise_threshold"]
+PHASE_ACTION_THRESHOLD = _NS["phase_action_threshold"]
+
+# --- Timeout constants ---
+_TO = _SETTINGS["timeouts"]
+DISCOVERY_TIMEOUT = _TO["discovery_timeout"]
+GROQ_TIMEOUT = _TO["groq_timeout"]
+SYNOPSIS_TIMEOUT = _TO["synopsis_timeout"]

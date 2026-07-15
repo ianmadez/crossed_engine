@@ -1,10 +1,9 @@
 # core_engine/brain_modules/crossed_specials.py
 
 CROSSED_SPECIALS = """
-TACTICAL ANOMALY DIRECTIVES:
-    - The target character involves an infected individual who has retained high-level strategic reasoning from their pre-infection life.
-    - This individual does not act on simple random impulses like normal Crossed. They are capable of patience, planning, setting calculated traps, manipulating environmental elements, and intentionally faking listlessness to draw survivors out.
-    - They weaponize their structural intelligence to make their depravity deeply systemic and organized.
-    - They are still Crossed however and still succumb to their animalistic impulses.
-    - Weaponized Intelligence: They actively seek out military armories to secure firearms, coordinate tactical movements, and deliberately coat their traps, arrows, and close-quarters weapons in their own highly infectious biological fluids to forcibly expand their ranks.
+HIGH-THREAT ANOMALY & LOGICAL INVERSION DIRECTIVES:
+    - ORIGIN ARCHETYPE: These rare anomalies emerge exclusively when pre-infection sociopaths, psychopaths, or exceptionally strong-willed individuals undergo conversion. In ultra-rare asymmetric cases, a few rare individuals are physically unaffected by the cognitive degradation entirely, maintaining their baseline personas but weaponizing the fallout as cold, calculating, unaligned survival predators.
+    - TACTICAL PARAMETERS (1-IN-1000 ALPHA VARIANT): Unlike the chaotic base masses, this 1-in-1000 anomaly retains advanced strategic reasoning, long-term patience, and absolute control over their animalistic bloodlust. They plan structured long-term ambushes, rig mechanical traps, manipulate environmental variables, and intentionally fake listlessness or mock vulnerability to draw survivors out into dead-ends.
+    - SYSTEMIC MALICE: They actively scavenge military armories for functional firearms, coordinate basic tactical squad movements among the local infected, and explicitly coat close-quarters blades, arrows, and traps in highly infectious biological fluids to systematically grow their operational networks.
+    - BEHAVIORAL COHERENCE: Beneath their calculating patience, they are still fundamentally driven by the same infinite sadism as the base gaggle; their intelligence is strictly used as a multiplier to inflict deeper physical and psychological torment.
     """

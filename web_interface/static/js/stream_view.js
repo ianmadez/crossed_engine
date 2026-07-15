@@ -14,6 +14,20 @@ function initCrucibleInterface(scenario, characters) {
     const terminal = document.getElementById('hud-terminal');
     terminal.innerHTML += `<p class="sys-msg">[Setup]: Prompt matrices mapped cleanly inside session cache.</p>`;
     terminal.scrollTop = terminal.scrollHeight;
+
+    // If book is complete, lock down the generator panel
+    if (typeof currentBookComplete !== 'undefined' && currentBookComplete) {
+        const forgeBtn = document.querySelector('.action-btn[onclick*="triggerChapterGeneration"]');
+        if (forgeBtn) {
+            forgeBtn.disabled = true;
+            forgeBtn.textContent = '[RECORD CONCLUDED]';
+            forgeBtn.style.opacity = '0.4';
+            forgeBtn.style.cursor = 'not-allowed';
+        }
+        // Grey out all config inputs
+        document.querySelectorAll('#model-selection, #pack-selection, #context-scale-selection, #threat-toggle, #two-pass-toggle')
+            .forEach(el => { el.disabled = true; el.style.opacity = '0.4'; });
+    }
     
     // Fire dynamic discovery fetches when entering the generator view
     fetchModelList();
@@ -104,6 +118,8 @@ function triggerChapterGeneration() {
     terminal.innerHTML += `<p class="sys-msg" style="color: #d1c7bd;">[Engine]: Initializing streaming connection loop constraints (Scale: ${contextScale} tokens)...</p>`;
     terminal.scrollTop = terminal.scrollHeight;
 
+    let totalTokensReceived = 0;
+
     const requestPayload = {
         book_id: currentBookId,
         chapter_num: currentChapterNum,
@@ -113,7 +129,8 @@ function triggerChapterGeneration() {
         pack_name: packName || null,
         special_threat: specialThreat,
         context_scale: contextScale,
-        model_name: modelName || null
+        model_name: modelName || null,
+        two_pass: document.getElementById('two-pass-toggle').checked
     };
 
     fetch('/api/stream-forge', {
@@ -139,11 +156,20 @@ function triggerChapterGeneration() {
                         try {
                             const data = JSON.parse(line.substring(6));
                             if (data.token) {
+                                totalTokensReceived++;
                                 const textNode = document.createTextNode(data.token);
                                 textCanvas.appendChild(textNode);
                                 textCanvas.scrollTop = textCanvas.scrollHeight;
                             }
                             if (data.done) {
+                                if (totalTokensReceived === 0) {
+                                    const errorOverlay = document.getElementById('critical-error-overlay');
+                                    if (errorOverlay) {
+                                        document.getElementById('error-status-msg').textContent = "DATA LINK SHUTDOWN: Stream returned empty textual matrix.";
+                                        errorOverlay.classList.remove('hidden');
+                                    }
+                                    return;
+                                }
                                 terminal.innerHTML += `<p class="sys-msg" style="color: #4a8c4a;">[Success]: Prose chunk write resolved. Memory matrix stub updated safely.</p>`;
                                 if (data.summary_stub) {
                                     terminal.innerHTML += `<div style="color: #bfa393; font-size: 0.8rem; margin: 5px 0; padding-left: 5px; border-left: 2px solid #8c2323;">${data.summary_stub}</div>`;

@@ -30,8 +30,24 @@ def initialize_new_volume():
         return jsonify({"status": "error", "message": "Missing required scenario or survivor vectors."}), 400
 
     try:
-        new_book_id = create_book(title, scenario, characters, total_chapters, ending_type)
+        # Import the compilation gate utility dynamically to prevent cyclic loops
+        from core_engine.ollama_client import generate_volume_synopsis
+        
+        # Compute the non-jargon synopsis text pass using the raw scenario parameters
+        synopsis_blurb = generate_volume_synopsis(title, scenario, characters)
+        
+        new_book_id = create_book(title, scenario, characters, total_chapters, ending_type, synopsis=synopsis_blurb)
         return jsonify({"status": "success", "book_id": new_book_id}), 201
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@library_api.route("/api/books/<int:book_id>", methods=["DELETE"])
+def delete_volume_route(book_id):
+    """Deletes an active volume from the repository database layer."""
+    try:
+        from core_engine.database import delete_book
+        delete_book(book_id)
+        return jsonify({"status": "success", "message": "Volume successfully wiped from the ledger."}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
