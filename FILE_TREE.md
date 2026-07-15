@@ -1,4 +1,8 @@
-# crossed_engine — Project File Tree
+# Crossed Engine -- Project File Tree
+
+> This is an experimental, open-source hobby project inspired by the Crossed universe (Garth Ennis / Jacen Burrows). It has no affiliation with the original works. No copyright infringement intended. The engine has real limitations -- performance depends entirely on your local hardware and the quality of the model you have pulled. It is being actively improved.
+
+---
 
 ```
 crossed_engine/

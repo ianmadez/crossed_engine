@@ -1,6 +1,8 @@
 # Crossed Engine
 
-A **fully local, fully free, open-source** interactive horror fiction engine powered by Ollama. Build story volumes, configure world scenarios and survivor dossiers, generate chapters via local LLMs, and read them in a dark typographic reader — all running 100% offline on your own hardware.
+A **fully local, fully free, open-source** interactive, uncensored horror fiction engine powered by Ollama. Build story volumes in fully unrestrained narrative detail, configure world scenarios and survivor dossiers, generate chapters via a local LLM, and read them in a dark Crossed-themed reader all running 100% offline on your own hardware. 
+
+The cool thing is, you could flip this into a completely different themed story generator. See **[ARCHITECTURE.md](ARCHITECTURE.md)**, and for agents: **[AGENTS.md](AGENTS.md)**.
 
 > **Inspired by, and in no way affiliated or meant to rip-off:** The Crossed universe (Garth Ennis / Jacen Burrows)
 
@@ -8,13 +10,17 @@ A **fully local, fully free, open-source** interactive horror fiction engine pow
 
 ## Features
 
-- **Local AI Generation** — Chapter-by-chapter streaming via Ollama, no cloud dependency. A built-in pacing lock prevents the AI from rushing — every chapter unfolds minute by minute with full conversations, spatial awareness, and internal monologue.
-- **Dynamic Model Selection** — Discover and swap out any model pulled into your Ollama instance directly from the UI
-- **Author Style Profiles** — Swap between King, McCarthy, Ennis, or add your own writing packs
-- **State Delta Memory** — The engine doesn't write each chapter in a vacuum. After every chapter, it extracts a precise snapshot of where everyone is, what they're carrying, and how badly they're hurt. Before the next chapter, it compares what changed and carries everything else forward unchanged. No more characters teleporting or gear magically respawning.
-- **3D Library Shelf** — Visual book management with Three.js
-- **Ambient Audio** — Optional background atmosphere track with volume control
-- **SSE Streaming** — Real-time token-by-token prose rendering in the browser
+- **Local AI Generation**: Chapter-by-chapter streaming via Ollama, no cloud dependency. A built-in pacing lock prevents the AI from rushing, where every chapter unfolds minute by minute with full conversations, spatial awareness, and internal monologue.
+
+- **Dynamic Model Selection**: Discover and swap out any model pulled into your Ollama instance directly from the UI
+
+- **Author Style Profiles**:  Swap between King, McCarthy, Ennis, or add your own writing packs
+
+- **State Delta Memory**: The engine doesn't write each chapter in a vacuum. After every chapter, it extracts a precise snapshot of where everyone is, what they're carrying, and how badly they're hurt. Before the next chapter, it compares what changed and carries everything else forward unchanged. Characters don't teleport or have gear magically respawning.
+
+- **Ambient Audio**: Optional background atmosphere track with volume control
+
+- **SSE Streaming**: Real-time token-by-token prose rendering in the browser
 
 ---
 
@@ -58,23 +64,52 @@ Open your browser to **http://127.0.0.1:8000**
 
 ## Suggested Uncensored Local Models
 
-The engine dynamically discovers whichever models you have pulled in your local Ollama instance. Below is a curated list of unaligned models ranging from a lightweight 3B up to a 24B parameter density.
+The engine dynamically discovers whichever models you have pulled in your local Ollama instance. Below is a curated list of recommended unaligned/uncensored models ranging from a lightweight 3B up to a 24B parameter density.
 
 #### ⚡ 1. Lightweight Tier (3B)
-- **Llama 3.2 Uncensored 3B** (`ollama pull artifish/llama3.2-uncensored`)
-- **Dolphin Phi 2.7B** (`ollama pull dolphin-phi`)
+
+- **Llama 3.2 Uncensored 3B** 
+#### Command to download it on your terminal
+(`ollama pull artifish/llama3.2-uncensored`)
+
+- **Dolphin Phi 2.7B** 
+#### Command to download it on your terminal
+(`ollama pull dolphin-phi`)
+
 
 #### 🎯 2. Performance Sweet Spot (7B – 9B)
-- **Dolphin 3.0 Llama 3.1 8B (Q4_0 VRAM Fit)** (`ollama pull hf.co/cognitivecomputations/Dolphin3.0-Llama3.1-8B-GGUF:Q4_0`) — **I am using this model on my GTX1650, works great.**
-- **Dolphin 2.9 Llama 3 8B** (`ollama pull dolphin-llama3`)
+
+- **Dolphin 3.0 Llama 3.1 8B (Q4_0 VRAM Fit)** 
+#### Command to download it on your terminal
+(`ollama pull hf.co/cognitivecomputations/Dolphin3.0-Llama3.1-8B-GGUF:Q4_0`) — **I am using this model on my GTX1650, works great.**
+
+- **Dolphin 2.9 Llama 3 8B** 
+#### Command to download it on your terminal
+(`ollama pull dolphin-llama3`)
+
 
 #### ⛓️ 3. Mid-Range Tier (13B – 15B)
-- **WizardLM Uncensored 13B** (`ollama pull wizardlm-uncensored:13b`)
-- **DolphinCoder 15B** (`ollama pull dolphincoder:15b`)
+
+- **WizardLM Uncensored 13B** 
+#### Command to download it on your terminal
+(`ollama pull wizardlm-uncensored:13b`)
+
+- **DolphinCoder 15B** 
+#### Command to download it on your terminal
+(`ollama pull dolphincoder:15b`)
+
 
 #### 🛑 4. High-Density Tier (22B – 24B)
-- **Dolphin 2.9.1 Mixtral 1x22B (Q4_K_M)** (`ollama pull hf.co/bartowski/dolphin-2.9.1-mixtral-1x22b-GGUF:Q4_K_M`)
-- **Mistral Small Abliterated 24B** (`ollama pull huihui_ai/mistral-small-abliterated`)
+
+- **Dolphin 2.9.1 Mixtral 1x22B (Q4_K_M)** 
+#### Command to download it on your terminal
+(`ollama pull hf.co/bartowski/dolphin-2.9.1-mixtral-1x22b-GGUF:Q4_K_M`)
+
+- **Mistral Small Abliterated 24B** 
+#### Command to download it on your terminal
+(`ollama pull huihui_ai/mistral-small-abliterated`)
+
+**Manually look up how to download any of these if the pull command is incorrect**
 
 ---
 
@@ -112,16 +147,18 @@ Edit `settings.json`, restart the server, and the new values apply immediately.
 
 ### 1. Create a Book Volume
 Click **"Create New Volume"** on the Library Shelf. Fill in:
-- **Book Title** — name your story
-- **World Scenario Config** — location, time, weather, environmental rules (add as many beats as you like)
-- **Main Characters** — name, health, appearance, behavioral traits per survivor
+- **Book Title**: name your story
+
+- **World Scenario Config**: location, time, weather, environmental rules (add as many beats as you like)
+
+- **Main Characters**: name, health, appearance, behavioral traits per survivor
 
 ### 2. Generate Chapters
 Navigate to the **Generator** panel:
-- **Select a model** — auto-detected from your Ollama instance
-- **Choose an author style profile** — King, McCarthy, Ennis, or a custom pack you added
-- **Set context scale** — 4096 (default) for GTX 1650, 2048 for low-spec hardware
-- **Toggle threat behavior** — enables high-threat special Crossed appearances
+- **Select a model**: auto-detected from your Ollama instance
+- **Choose an author style profile**: King, McCarthy, Ennis, or a custom pack you added
+- **Set context scale**: 4096 (default) for GTX 1650, 2048 for low-spec hardware
+- **Toggle threat behavior**: enables high-threat special Crossed appearances
 - Click **"Forge Next Chapter"** and watch the prose stream in real-time
 
 ### 3. Read
@@ -133,9 +170,11 @@ Navigate to **Reader Mode** to browse all generated chapters with a table-of-con
 
 The engine uses a two-phase cycle to write fiction that stays coherent across many chapters.
 
-**Phase 1 — Write a chapter.** You configure your world (location, time, environmental rules) and your characters (name, appearance, gear, personality). When you click "Forge Next Chapter," the engine bundles everything together — your setup, the author voice profile you selected, the history of what's happened so far, and a set of pacing rules that force the AI to write slowly and deliberately. The text streams into your browser token by token, so you watch the story being written in real time.
+**Phase 1 — Write a chapter.** 
+You configure your world (location, time, environmental rules) and your characters (name, appearance, gear, personality). When you click "Forge Next Chapter," the engine bundles everything together — your setup, the author voice profile you selected, the history of what's happened so far, and a set of pacing rules that force the AI to write slowly and deliberately. The text streams into your browser token by token, so you watch the story being written in real time.
 
-**Phase 2 — Take inventory.** As soon as the chapter finishes, a second AI pass scans the text with surgical precision. It extracts a structured snapshot:
+**Phase 2 — Take inventory.** 
+As soon as the chapter finishes, a second AI pass scans the text with surgical precision. It extracts a structured snapshot:
 - Where the characters are and how much time has passed
 - Every character's physical condition and mental state
 - What gear, weapons, and supplies are still with them
@@ -143,7 +182,7 @@ The engine uses a two-phase cycle to write fiction that stays coherent across ma
 
 And the important part is that it doesn't start from scratch. It pulls up the snapshot from the *previous* chapter and compares the two. If a character was holding a knife in the last chapter and the new chapter never mentions dropping it, the knife stays in their hand. If someone had a gash on their arm and the text doesn't describe it being treated, the wound is still there.
 
-> **The golden rule: silence means nothing changed.** The engine is an index calculator, not a creative writer. If the new text doesn't explicitly say something changed, it assumes everything is exactly as it was.
+> **The golden rule: silence means nothing changed.** The engine really is an index calculator, not a creative writer per se. If the new text doesn't explicitly say something changed, it assumes everything is exactly as it was.
 
 This snapshot is then fed into the next chapter's prompt, so the AI never has to guess where things left off. It sees the exact state of the world — locations, injuries, inventory, threats — and writes the next chapter from that solid foundation.
 
@@ -164,7 +203,7 @@ PROFILE: YOUR NAME
 """
 ```
 
-The engine auto-discovers it — no HTML or route changes needed. It will appear in the dropdown.
+The engine auto-discovers it, no HTML or route changes needed. It will appear in the dropdown.
 
 ---
 
