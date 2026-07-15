@@ -1,4 +1,5 @@
 # Crossed Engine
+<img width="800" height="500" alt="image" src="https://github.com/user-attachments/assets/fd0923df-a03b-44e5-87e6-02d5705e092c" />
 
 A **fully local, fully free, open-source** interactive, uncensored horror fiction engine powered by Ollama. Build story volumes in fully unrestrained narrative detail, configure world scenarios and survivor dossiers, generate chapters via a local LLM, and read them in a dark Crossed-themed reader all running 100% offline on your own hardware. 
 
@@ -11,6 +12,7 @@ The cool thing is, you could flip this into a completely different themed story 
 ## Features
 
 - **Local AI Generation**: Chapter-by-chapter streaming via Ollama, no cloud dependency. A built-in pacing lock prevents the AI from rushing, where every chapter unfolds minute by minute with full conversations, spatial awareness, and internal monologue.
+<img width="800" height="500" alt="image" src="https://github.com/user-attachments/assets/6d7aa2d6-939c-4d1b-abd0-14eefb107bc0" />
 
 - **Dynamic Model Selection**: Discover and swap out any model pulled into your Ollama instance directly from the UI
 
@@ -194,6 +196,7 @@ Navigate to the **Generator** panel:
 
 ### 3. Read
 Navigate to **Reader Mode** to browse all generated chapters with a table-of-contents jump navigation.
+<img width="800" height="500" alt="image" src="https://github.com/user-attachments/assets/f0c6fd77-bf87-4554-bc45-b507b0eb71ab" />
 
 ---
 
