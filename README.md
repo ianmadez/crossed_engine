@@ -196,6 +196,7 @@ Navigate to the **Generator** panel:
 
 ### 3. Read
 Navigate to **Reader Mode** to browse all generated chapters with a table-of-contents jump navigation.
+<img width="800" height="500" alt="image" src="https://github.com/user-attachments/assets/f0c6fd77-bf87-4554-bc45-b507b0eb71ab" />
 
 ---
 
