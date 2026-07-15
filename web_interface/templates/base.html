@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Story Vault</title>
+    <link rel="icon" type="image/png" sizes="30x30" href="{{ url_for('static', filename='c-favicon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+
+<body>
+    <div id="loading-screen">
+        <div class="loading-content">
+            <h1 class="loading-logo">CROSSED: THE ARCHIVES</h1>
+            <div class="loading-bar-container">
+                <div id="loading-bar-progress"></div>
+            </div>
+            <p class="loading-subtext">Initializing local engine pipelines...</p>
+        </div>
+    </div>
+
+    <div id="critical-error-overlay" class="hidden">
+        <div class="blood-splatter-bg"></div>
+        <div class="error-panel">
+            <h2>CRITICAL ERROR</h2>
+            <h1 id="error-status-msg">[BRAIN LINK SEVERED]</h1>
+            <p>The local Ollama server connection dropped or failed to stream tokens. Ensure your model is pulled and
+                engine port 11434 is running active.</p>
+            <button class="action-btn" style="margin-top:20px;" onclick="dismissErrorOverlay()">Dismiss Monitor</button>
+        </div>
+    </div>
+
+    <div id="three-shelf-canvas"></div>
+
+    <audio id="ambient-audio" loop src="{{ url_for('static', filename='assets/audio/ambience.mp3') }}"></audio>
+
+    <div class="app-container">
+        <header class="vault-header">
+            <h1 class="logo" title="Local Story Engine Writing Space">CROSSED: THE ARCHIVES</h1>
+            <nav class="nav-menu">
+                <button class="nav-btn active" onclick="navigateView('shelf')"
+                    title="View your collection of books">Library Shelf</button>
+                <button class="nav-btn" onclick="navigateView('generator')"
+                    title="Write new chapters with local AI">Generator</button>
+                <button class="nav-btn" onclick="navigateView('reader')"
+                    title="Read completed text with clean typography">Reader Mode</button>
+
+                <div style="position: relative; display: inline-block;">
+                    <button id="audio-toggle-btn" class="nav-btn audio-mute" onclick="toggleAudioPanel()"
+                        title="Open volume settings panel">🔊 Sound Options</button>
+
+                    <div id="audio-mixer-panel" class="hidden"
+                        style="position: absolute; right: 0; top: 45px; background: #1a1412; border: 2px solid #000; padding: 15px; box-shadow: 5px 5px 15px rgba(0,0,0,0.8); z-index: 1000; width: 220px; display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label
+                                style="font-size: 0.75rem; color: #bfa393; display: flex; justify-content: space-between;">
+                                <span>Atmosphere Volume</span>
+                                <span id="ambience-vol-label">35%</span>
+                            </label>
+                            <input type="range" id="volume-ambience" min="0" max="100" value="35"
+                                style="accent-color: #8c2323; cursor: pointer;" oninput="adjustVolumeChannels()">
+                        </div>
+                        <button id="mixer-mute-btn" class="nav-btn"
+                            style="font-size: 0.8rem; padding: 4px; margin-top: 5px; width: 100%;"
+                            onclick="toggleMuteState()">Mute Track</button>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <main class="vault-viewport">
+
+            <section id="view-shelf" class="workspace-view">
+                <div class="overlay-panel text-center">
+                    <h2>Your Book Collection</h2>
+                    <p>Select a chronicle from the shelf row grids below or construct a completely new folder for a run
+                        (of issues).</p>
+                    <button class="action-btn" style="margin-top: 20px;" onclick="openNewVolumeModal()"
+                        title="Start configuring a new book project">Create New Volume</button>
+                </div>
+            </section>
+
+            <section id="view-generator" class="workspace-view hidden">
+                <div class="crucible-workspace">
+                    <div class="hud-panel flex-column">
+                        <h3>System Logs</h3>
+                        <div id="hud-terminal" class="terminal-box"
+                            style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; box-sizing: border-box;"
+                            title="Real-time text engine status and generation logs">
+                            <p class="sys-msg">[System]: Local storage online. Ready to stream text.</p>
+                        </div>
+
+                        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-size: 0.85rem; color: #bfa393;">Active LLM Model</label>
+                                <select id="model-selection"
+                                    style="width: 100%; background: #000; color: #d9d2c9; border: 1px solid #3d302a; padding: 8px; font-family: inherit; cursor: pointer; box-sizing: border-box;">
+                                    <option value="">Detecting models...</option>
+                                </select>
+                            </div>
+
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-size: 0.85rem; color: #bfa393;">Active Author Style Profile</label>
+                                <select id="pack-selection"
+                                    style="width: 100%; background: #000; color: #d9d2c9; border: 1px solid #3d302a; padding: 8px; font-family: inherit; cursor: pointer; box-sizing: border-box;">
+                                    <option value="">Baseline Author Voice</option>
+                                    <option value="king">Stephen King (Slow-Burn Suspense & Natural Dialogue)</option>
+                                    <option value="mccarthy">Cormac McCarthy (Stark prose rhythm & Minimal Punctuation)
+                                    </option>
+                                    <option value="ennis">Garth Ennis (Dark Cynical Irony & Heavy Conflict Standoffs)
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-size: 0.85rem; color: #bfa393;">Hardware Context Scale
+                                    Allocation</label>
+                                <select id="context-scale-selection"
+                                    style="width: 100%; background: #000; color: #d9d2c9; border: 1px solid #3d302a; padding: 8px; font-family: inherit; cursor: pointer; box-sizing: border-box;">
+                                    <option value="4096">4096 Tokens (GTX 1650 Standard VRAM Safe Boundary)</option>
+                                    <option value="2048">2048 Tokens (Low Spec Truncation Fail-safe Mode)</option>
+                                </select>
+                            </div>
+
+                            <label
+                                style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: #bfa393; cursor: pointer;">
+                                <input type="checkbox" id="threat-toggle"
+                                    style="accent-color: #8c2323; transform: scale(1.1);"> Enforce Special Crossed
+                                Appearance
+                            </label>
+
+                            <button class="action-btn" style="width: 100%; margin-top: 5px; padding: 12px;"
+                                onclick="triggerChapterGeneration()">Forge Next Chapter</button>
+                        </div>
+                    </div>
+
+                    <div class="hud-panel text-output">
+                        <h3>Dynamic Writing Window</h3>
+                        <div id="live-text-canvas" class="ink-parchment-canvas"
+                            title="Live stream terminal viewport for the current chapter prose output"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-reader" class="workspace-view hidden">
+                <div class="codex-container">
+                    <article id="reader-paper" class="reader-viewframe">
+                        <h2 id="reader-title">No Chapters Created</h2>
+                        <div id="reader-body" class="reader-prose">
+                            <p class="placeholder" style="text-align: center; text-indent: 0;">Select a book
+                                from the library shelf tab to display clean typographic presentation layouts
+                                here.</p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/stream_view.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/library_3d.js') }}"></script>
+</body>
+
+</html>

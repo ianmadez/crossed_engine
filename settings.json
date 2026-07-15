@@ -1,0 +1,19 @@
+{
+    "ollama": {
+        "host": "http://localhost:11434",
+        "timeout": 120
+    },
+    "server": {
+        "host": "127.0.0.1",
+        "port": 8000
+    },
+    "generation": {
+        "temperature": 0.88,
+        "top_p": 0.92,
+        "num_ctx": 4096,
+        "num_predict": 1024
+    },
+    "database": {
+        "path": "library_vault.db"
+    }
+}
