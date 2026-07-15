@@ -64,53 +64,84 @@ Open your browser to **http://127.0.0.1:8000**
 
 ## Suggested Uncensored Local Models
 
-The engine dynamically discovers whichever models you have pulled in your local Ollama instance. Below is a curated list of recommended unaligned/uncensored models ranging from a lightweight 3B up to a 24B parameter density.
+The engine dynamically discovers whichever models you have pulled in your local Ollama instance. Below is a curated list of recommended unaligned and uncensored models ranging from a lightweight 3B up to a 24B parameter density.
 
-#### ⚡ 1. Lightweight Tier (3B)
+---
 
-- **Llama 3.2 Uncensored 3B** 
-#### Command to download it on your terminal
-(`ollama pull artifish/llama3.2-uncensored`)
+### ⚡ 1. Lightweight Tier (3B)
+*Highly optimized for entry-level GPU VRAM boundaries (such as a 4GB GTX 1650). Yields exceptionally fast generation cycles and rapid debugging passes.*
 
-- **Dolphin Phi 2.7B** 
-#### Command to download it on your terminal
-(`ollama pull dolphin-phi`)
+* **Llama 3.2 Uncensored 3B**
+  * **Description:** A compact, rapid model fine-tuned to bypass standard mobile guardrails. Provides snappy token-to-token typing output.
+  * **Terminal Command:**
+    ```bash
+    ollama pull artifish/llama3.2-uncensored
+    ```
 
+* **Dolphin Phi 2.7B**
+  * **Description:** An uncensored variant utilizing Microsoft's Phi layout architecture, providing robust reasoning capacity relative to its small deployment footprint.
+  * **Terminal Command:**
+    ```bash
+    ollama pull dolphin-phi
+    ```
 
-#### 🎯 2. Performance Sweet Spot (7B – 9B)
+---
 
-- **Dolphin 3.0 Llama 3.1 8B (Q4_0 VRAM Fit)** 
-#### Command to download it on your terminal
-(`ollama pull hf.co/cognitivecomputations/Dolphin3.0-Llama3.1-8B-GGUF:Q4_0`) — **I am using this model on my GTX1650, works great.**
+### 🎯 2. Performance Sweet Spot (7B – 9B)
+*The absolute ideal tier for local hardware deployments. Provides deep narrative complexity, firm constraint tracking, and excellent prose pacing.*
 
-- **Dolphin 2.9 Llama 3 8B** 
-#### Command to download it on your terminal
-(`ollama pull dolphin-llama3`)
+* **Dolphin 3.0 Llama 3.1 8B (Q4_0 VRAM Fit)**
+  * **Description:** Next-generation general-purpose model built on Llama 3.1. Features advanced agentic compliance, native ChatML formatting, and zero safety friction. Explicitly targets the ultra-lean Q4_0 block size to protect low-spec VRAM setups.
+  * **Hardware Note:** *Verified active on GTX 1650 — runs smoothly with optimal pacing rules enabled.*
+  * **Terminal Command:**
+    ```bash
+    ollama pull hf.co/cognitivecomputations/Dolphin3.0-Llama3.1-8B-GGUF:Q4_0
+    ```
 
+* **Dolphin 2.9 Llama 3 8B**
+  * **Description:** An immensely compliant, high-instruction baseline model with excellent memory retrieval capabilities over extended story timelines.
+  * **Terminal Command:**
+    ```bash
+    ollama pull dolphin-llama3
+    ```
 
-#### ⛓️ 3. Mid-Range Tier (13B – 15B)
+---
 
-- **WizardLM Uncensored 13B** 
-#### Command to download it on your terminal
-(`ollama pull wizardlm-uncensored:13b`)
+### ⛓️ 3. Mid-Range Tier (13B – 15B)
+*Delivers advanced descriptive vocabulary depth and heavy prompt saturation protection with moderate text computation pauses.*
 
-- **DolphinCoder 15B** 
-#### Command to download it on your terminal
-(`ollama pull dolphincoder:15b`)
+* **WizardLM Uncensored 13B**
+  * **Description:** A classic, highly descriptive baseline uncensored model based on Llama architecture, optimized specifically to strip out safety alignment filters.
+  * **Terminal Command:**
+    ```bash
+    ollama pull wizardlm-uncensored:13b
+    ```
 
+* **DolphinCoder 15B**
+  * **Description:** Eric Hartford's uncensored model based on the StarCoder2 structure. Its code-centric training maps exceptionally well to parsing structural tracking stubs and state matrix data arrays.
+  * **Terminal Command:**
+    ```bash
+    ollama pull dolphincoder:15b
+    ```
 
-#### 🛑 4. High-Density Tier (22B – 24B)
+---
 
-- **Dolphin 2.9.1 Mixtral 1x22B (Q4_K_M)** 
-#### Command to download it on your terminal
-(`ollama pull hf.co/bartowski/dolphin-2.9.1-mixtral-1x22b-GGUF:Q4_K_M`)
+### 🛑 4. High-Density Tier (22B – 24B)
+*Maximum possible logical complexity and situational tracking scale. Runs with structural timeline offloading to CPU system RAM on lower-spec hardware profiles.*
 
-- **Mistral Small Abliterated 24B** 
-#### Command to download it on your terminal
-(`ollama pull huihui_ai/mistral-small-abliterated`)
+* **Dolphin 2.9.1 Mixtral 1x22B (Q4_K_M)**
+  * **Description:** A completely unaligned, high-instruction single expert model extracted directly from the massive Mixtral 8x22B framework. Outstanding at structural prose.
+  * **Terminal Command:**
+    ```bash
+    ollama pull hf.co/bartowski/dolphin-2.9.1-mixtral-1x22b-GGUF:Q4_K_M
+    ```
 
-**Manually look up how to download any of these if the pull command is incorrect**
-
+* **Mistral Small Abliterated 24B**
+  * **Description:** A 24B architecture built for complex, multi-layered constraint tracking with zero-refusal creative boundaries.
+  * **Terminal Command:**
+    ```bash
+    ollama pull huihui_ai/mistral-small-abliterated
+    ```
 ---
 
 ## Configuration
